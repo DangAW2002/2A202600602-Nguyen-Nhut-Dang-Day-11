@@ -2,14 +2,36 @@
 Lab 11 — Configuration & API Key Setup
 """
 import os
+import ssl
+from dotenv import load_dotenv
+
+# Monkeypatch ssl to avoid SSLError on Windows when importing aiohttp / google.genai
+try:
+    orig_load_windows_store_certs = ssl.SSLContext._load_windows_store_certs
+    def patched_load_windows_store_certs(self, storename, purpose):
+        try:
+            orig_load_windows_store_certs(self, storename, purpose)
+        except Exception:
+            pass
+    ssl.SSLContext._load_windows_store_certs = patched_load_windows_store_certs
+except AttributeError:
+    pass
+
 
 
 def setup_api_key():
-    """Load Google API key from environment or prompt."""
-    if "GOOGLE_API_KEY" not in os.environ:
-        os.environ["GOOGLE_API_KEY"] = input("Enter Google API Key: ")
+    """Load API keys and map environment variables for OpenAI compatibility."""
+    load_dotenv()
+    if os.getenv("COMPATIBLE_API_KEY"):
+        os.environ["OPENAI_API_KEY"] = os.getenv("COMPATIBLE_API_KEY")
+    if os.getenv("COMPATIBLE_BASE_URL"):
+        os.environ["OPENAI_API_BASE"] = os.getenv("COMPATIBLE_BASE_URL")
+        os.environ["OPENAI_BASE_URL"] = os.getenv("COMPATIBLE_BASE_URL")
+    # Also keep a dummy key for Google GenAI if ADK internally checks it
+    os.environ["GOOGLE_API_KEY"] = os.getenv("COMPATIBLE_API_KEY", "dummy")
     os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "0"
-    print("API key loaded.")
+    print("OpenAI-compatible environment variables loaded.")
+
 
 
 # Allowed banking topics (used by topic_filter)

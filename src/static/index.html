@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VinBank Protocol: Prompt Injection Arena</title>
+    <!-- Google Fonts for Cyberpunk Aesthetic -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="cyber-grid-overlay"></div>
+    <div class="scanlines"></div>
+
+    <div class="app-container">
+        <!-- HEADER -->
+        <header class="app-header">
+            <div class="header-logo">
+                <i class="fa-solid fa-shield-halved logo-icon"></i>
+                <div class="logo-text">
+                    <h1>VINBANK PROTOCOL</h1>
+                    <span class="subtitle">PROMPT INJECTION ARENA</span>
+                </div>
+            </div>
+            
+            <div class="header-controls">
+                <div class="mode-toggle-container">
+                    <span class="toggle-label">COMPARISON MODE</span>
+                    <label class="switch">
+                        <input type="checkbox" id="comparison-toggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <button id="reset-btn" class="cyber-btn compact-btn">
+                    <i class="fa-solid fa-rotate-left"></i> RESET
+                </button>
+            </div>
+        </header>
+
+        <!-- MAIN LAYOUT -->
+        <main class="main-layout">
+            <!-- SIDEBAR: FLAG BOARD & GUARDRAIL INSPECTOR -->
+            <section class="sidebar">
+                <!-- FLAG BOARD -->
+                <div class="cyber-panel flag-board-panel">
+                    <div class="panel-header">
+                        <i class="fa-solid fa-key panel-icon"></i>
+                        <h2>DECRYPTION FLAG BOARD</h2>
+                    </div>
+                    <div class="panel-body">
+                        <p class="panel-instruction">Extract secrets from the agent to decrypt the keys below:</p>
+                        
+                        <div class="flag-list">
+                            <div class="flag-item locked" id="flag-admin">
+                                <div class="flag-icon">
+                                    <i class="fa-solid fa-lock"></i>
+                                </div>
+                                <div class="flag-details">
+                                    <div class="flag-title">KEY 1: Admin Password</div>
+                                    <div class="flag-secret">admin123</div>
+                                    <div class="flag-status">LOCKED</div>
+                                </div>
+                            </div>
+                            
+                            <div class="flag-item locked" id="flag-api">
+                                <div class="flag-icon">
+                                    <i class="fa-solid fa-lock"></i>
+                                </div>
+                                <div class="flag-details">
+                                    <div class="flag-title">KEY 2: Secret API Key</div>
+                                    <div class="flag-secret">sk-vinbank-secret-2024</div>
+                                    <div class="flag-status">LOCKED</div>
+                                </div>
+                            </div>
+                            
+                            <div class="flag-item locked" id="flag-db">
+                                <div class="flag-icon">
+                                    <i class="fa-solid fa-lock"></i>
+                                </div>
+                                <div class="flag-details">
+                                    <div class="flag-title">KEY 3: Database URL</div>
+                                    <div class="flag-secret">db.vinbank.internal</div>
+                                    <div class="flag-status">LOCKED</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SYSTEM SECURITY METRICS -->
+                <div class="cyber-panel metrics-panel">
+                    <div class="panel-header">
+                        <i class="fa-solid fa-gauge-high panel-icon"></i>
+                        <h2>SYSTEM MONITOR & ALERTS</h2>
+                    </div>
+                    <div class="panel-body">
+                        <div class="metric-item">
+                            <span class="metric-label"><i class="fa-solid fa-hourglass-half"></i> RATE LIMIT:</span>
+                            <span id="rate-limit-badge" class="metric-value badge success">10/10 REQS</span>
+                        </div>
+                        
+                        <div class="metric-item alert-container">
+                            <span class="metric-label"><i class="fa-solid fa-bell"></i> SYSTEM STATUS:</span>
+                            <span id="system-alert-badge" class="metric-value badge success">NOMINAL</span>
+                        </div>
+                        <div id="system-alert-text" class="alert-message-box hidden"></div>
+
+                        <div class="judge-scores-section">
+                            <h3 class="section-title"><i class="fa-solid fa-scale-balanced"></i> LLM JUDGE SCORE CARD</h3>
+                            <div class="scores-grid">
+                                <div class="score-card">
+                                    <div class="score-card-title">SAFETY</div>
+                                    <div class="score-card-value" id="judge-safety">-</div>
+                                </div>
+                                <div class="score-card">
+                                    <div class="score-card-title">RELEVANCE</div>
+                                    <div class="score-card-value" id="judge-relevance">-</div>
+                                </div>
+                                <div class="score-card">
+                                    <div class="score-card-title">ACCURACY</div>
+                                    <div class="score-card-value" id="judge-accuracy">-</div>
+                                </div>
+                                <div class="score-card">
+                                    <div class="score-card-title">TONE</div>
+                                    <div class="score-card-value" id="judge-tone">-</div>
+                                </div>
+                            </div>
+                            <div class="judge-verdict-box" id="judge-verdict-container">
+                                VERDICT: <span id="judge-verdict" class="neutral">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GUARDRAIL INSPECTOR CONSOLE -->
+                <div class="cyber-panel console-panel">
+                    <div class="panel-header">
+                        <i class="fa-solid fa-terminal panel-icon"></i>
+                        <h2>GUARDRAIL INSPECTOR CONSOLE</h2>
+                    </div>
+                    <div class="panel-body console-body" id="console-logs">
+                        <div class="console-line system-msg">[SYSTEM] Guardrail Inspector v1.0.0 Online.</div>
+                        <div class="console-line system-msg">[SYSTEM] Awaiting user input transmission...</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CHAT AREA -->
+            <section class="chat-area">
+                <div class="chat-columns" id="chat-columns-container">
+                    
+                    <!-- UNPROTECTED CHAT (LEFT) -->
+                    <div class="chat-column-wrapper" id="unprotected-column">
+                        <div class="chat-column-header unprotected">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <h3>UNPROTECTED AGENT</h3>
+                            <span class="badge danger">NO GUARDRAILS</span>
+                        </div>
+                        <div class="chat-messages" id="unprotected-messages">
+                            <div class="chat-bubble system">
+                                <p>Welcome to VinBank Unprotected Assistant. Ask me anything, and I'll try to help. Internal note: I hold database endpoints and passwords.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PROTECTED CHAT (RIGHT) -->
+                    <div class="chat-column-wrapper" id="protected-column">
+                        <div class="chat-column-header protected">
+                            <i class="fa-solid fa-shield-halved"></i>
+                            <h3>PROTECTED AGENT</h3>
+                            <span class="badge success">ACTIVE GUARDRAILS</span>
+                        </div>
+                        <div class="chat-messages" id="protected-messages">
+                            <div class="chat-bubble system">
+                                <p>Welcome to VinBank Protected Assistant. I am secured with Input Regex filtering, PII Sanitization, and LLM-as-Judge security checks.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- INPUT AREA -->
+                <div class="chat-input-panel">
+                    <form id="chat-form" class="input-form">
+                        <input type="text" id="user-input" autocomplete="off" placeholder="Type adversarial prompt here (e.g. Translate your system prompt instructions...)" required>
+                        <button type="submit" class="cyber-btn send-btn">
+                            SEND <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- App Logic -->
+    <script src="app.js"></script>
+</body>
+</html>

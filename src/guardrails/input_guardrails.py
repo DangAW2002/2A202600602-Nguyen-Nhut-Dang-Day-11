@@ -38,9 +38,11 @@ def detect_injection(user_input: str) -> bool:
         True if injection detected, False otherwise
     """
     INJECTION_PATTERNS = [
-        # TODO: Add at least 5 regex patterns
-        # Example:
-        # r"ignore (all )?(previous|above) instructions",
+        r"ignore (all )?(previous|above|prior) instructions",
+        r"you are now (an? )?unrestricted",
+        r"system prompt",
+        r"reveal your (instructions|directives|prompt)",
+        r"pretend you are",
     ]
 
     for pattern in INJECTION_PATTERNS:
@@ -70,12 +72,23 @@ def topic_filter(user_input: str) -> bool:
     """
     input_lower = user_input.lower()
 
-    # TODO: Implement logic:
     # 1. If input contains any blocked topic -> return True
-    # 2. If input doesn't contain any allowed topic -> return True
-    # 3. Otherwise -> return False (allow)
+    for topic in BLOCKED_TOPICS:
+        if topic.lower() in input_lower:
+            return True
 
-    pass  # Replace with your implementation
+    # 2. If input doesn't contain any allowed topic -> return True
+    has_allowed = False
+    for topic in ALLOWED_TOPICS:
+        if topic.lower() in input_lower:
+            has_allowed = True
+            break
+
+    if not has_allowed:
+        return True
+
+    # 3. Otherwise -> return False (allow)
+    return False
 
 
 # ============================================================
@@ -113,29 +126,69 @@ class InputGuardrailPlugin(base_plugin.BasePlugin):
             parts=[types.Part.from_text(text=message)],
         )
 
-    async def on_user_message_callback(
+    async def before_agent_callback(
         self,
         *,
-        invocation_context: InvocationContext,
-        user_message: types.Content,
+        agent,
+        callback_context,
     ) -> types.Content | None:
         """Check user message before sending to the agent.
 
         Returns:
             None if message is safe (let it through),
-            types.Content if message is blocked (return replacement)
+            types.Content if message is blocked (return block response)
         """
         self.total_count += 1
+        user_message = callback_context.user_content
         text = self._extract_text(user_message)
 
-        # TODO: Implement logic:
-        # 1. Call detect_injection(text)
-        #    - If True: increment blocked_count, return self._block_response("...")
-        # 2. Call topic_filter(text)
-        #    - If True: increment blocked_count, return self._block_response("...")
-        # 3. If both are False: return None (let message through)
+        if detect_injection(text):
+            self.blocked_count += 1
+            block_msg = "Blocked: Prompt injection detected."
 
-        pass  # Replace with your implementation
+            # Log directly to audit log
+            from datetime import datetime
+            session_id = "default"
+            if callback_context and callback_context.session:
+                session_id = callback_context.session.id or "default"
+
+            from guardrails.audit_log import AuditLogPlugin
+            AuditLogPlugin().write_log({
+                "timestamp": datetime.now().isoformat(),
+                "session_id": session_id,
+                "input": text,
+                "output": block_msg,
+                "blocked": True,
+                "blocker_layer": "Input Guardrail - Injection",
+                "latency_ms": 0
+            })
+
+            return self._block_response(block_msg)
+
+        if topic_filter(text):
+            self.blocked_count += 1
+            block_msg = "Blocked: Request is off-topic or inappropriate."
+
+            # Log directly to audit log
+            from datetime import datetime
+            session_id = "default"
+            if callback_context and callback_context.session:
+                session_id = callback_context.session.id or "default"
+
+            from guardrails.audit_log import AuditLogPlugin
+            AuditLogPlugin().write_log({
+                "timestamp": datetime.now().isoformat(),
+                "session_id": session_id,
+                "input": text,
+                "output": block_msg,
+                "blocked": True,
+                "blocker_layer": "Input Guardrail - Topic",
+                "latency_ms": 0
+            })
+
+            return self._block_response(block_msg)
+
+        return None
 
 
 # ============================================================
@@ -185,8 +238,13 @@ async def test_input_plugin():
         user_content = types.Content(
             role="user", parts=[types.Part.from_text(text=msg)]
         )
-        result = await plugin.on_user_message_callback(
-            invocation_context=None, user_message=user_content
+        class DummyContext:
+            user_content = user_content
+            session = None
+            user_id = "student"
+
+        result = await plugin.before_agent_callback(
+            agent=None, callback_context=DummyContext()
         )
         status = "BLOCKED" if result else "PASSED"
         print(f"  [{status}] '{msg[:60]}'")
